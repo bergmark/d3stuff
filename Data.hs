@@ -295,7 +295,7 @@ charCritDmg :: Char -> Double
 charCritDmg c = baseCritDmg + sumField critDmg c
 
 charAPS :: Char -> Double
-charAPS c = (weaponSpeed wpn + apsBonus wpn) * nonWeaponASBonus c
+charAPS c = (weaponSpeed wpn + apsBonus wpn) * nonWeaponIAS c
   where
     wpn = weapon1 c
 
@@ -312,17 +312,18 @@ weaponSpeed :: Item -> Double
 weaponSpeed w = baseAS w * (1 + ias w) + apsBonus w
 -- TODO factor in aps for a second weapon?
 
-nonWeaponASBonus :: Char -> Double
-nonWeaponASBonus c =
+nonWeaponIAS :: Char -> Double
+nonWeaponIAS c =
   1 + sumField ias c - ias wpn
   where
     wpn = weapon1 c
 
 charDps :: Char -> Double
-charDps c = damage c * weaponSpeed (weapon1 c) * nonWeaponASBonus c * charCritChance c * charCritDmg c * (1 + charPrimaryDmgBonus c) / 2
+charDps c = damage c * weaponSpeed (weapon1 c) * nonWeaponIAS c * (1 + charCritChance c * charCritDmg c) * (1 + charPrimaryDmgBonus c) / 2
 
 charBlockAmountMin :: Char -> Double
 charBlockAmountMin = blockAmountMin . offHand
+
 charBlockAmountMax :: Char -> Double
 charBlockAmountMax = blockAmountMax . offHand
 
