@@ -2,6 +2,8 @@ module Main where
 
 import Prelude hiding (Char)
 
+import Control.Monad
+
 import Data
 import Items
 
@@ -60,6 +62,28 @@ main = do
   "Missile Damage Reduction" `p` charMissileDmgRed myMonk
   "Melee Damage Reduction" `p` charMeleeDmgRed myMonk
   "Thorns" `p` charThorns myMonk
+  dashes
+  putStrLn "Life"
+  "Maximum Life" `p` charMaxLife myMonk
+  "Life Bonus" `perc` charLifeBonus myMonk
+  "Life per Second" `p` charLifeRegen myMonk
+  "Life per Kill" `p` charLifePerKill myMonk
+  "Life per Hit" `p` charLifeOnHit myMonk
+  "Health Globe Healing Bonus" `p` charHealthGlobeHeal myMonk
+  "Pickup Radius" `p` charPickupRadius myMonk
+  dashes
+  putStrLn "Resource"
+  forM_ (charResources myMonk)
+    (\r -> do
+      ("Maximum " ++ show r) `p` charResourceMax r myMonk
+      (show r ++ "Regenerated per Second") `p` charResourceRegen r myMonk)
+  dashes
+  putStrLn "Adventure"
+  "Movement Speed" `perc` charMovement myMonk
+  "Gold Find" `perc` charGF myMonk
+  "Magic Find" `perc` charMF myMonk
+  "Bonus Exp" `perc` charBonusExp myMonk
+  "Bonus Exp/Kill" `p` charBonusExpPerKill myMonk
   where
     pr :: Show s => s -> IO ()
     pr = putStr . show

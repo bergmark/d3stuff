@@ -34,6 +34,8 @@ data Item = Item {
   , blockAmountMax :: Double
   , bonusArmor :: Double
   , bonusBlockChance :: Double
+  , bonusExp :: Double
+  , bonusExpPerKill :: Double
   , coldRes :: Double
   , corpseSpiderDmg :: Double
   , critArcanePower :: Double
@@ -45,11 +47,13 @@ data Item = Item {
   , elMaxDmg :: Double
   , elMinDmg :: Double
   , fireRes :: Double
-  , healthGlobe :: Double
+  , gf :: Double
+  , healthGlobeHeal :: Double
   , ias :: Double
   , int :: Double
-  , life :: Double
+  , lifeBonus :: Double
   , lifeOnHit :: Double
+  , lifePerKill :: Double
   , lifeRegen :: Double
   , lightningRes :: Double
   , maxDmg :: Double
@@ -59,8 +63,10 @@ data Item = Item {
   , missileDmgRed :: Double
   , movement :: Double
   , physicalRes :: Double
+  , pickupRadius :: Double
   , poisonRes :: Double
   , reducedRendCost :: Double
+  , spiritRegen :: Double
   , str :: Double
   , thorns :: Double
   , vit :: Double
@@ -82,6 +88,8 @@ emptyItem s = Item {
   , blockAmountMin = 0
   , bonusArmor = 0
   , bonusBlockChance = 0
+  , bonusExp = 0
+  , bonusExpPerKill = 0
   , coldRes = 0
   , corpseSpiderDmg = 0
   , critArcanePower = 0
@@ -93,11 +101,13 @@ emptyItem s = Item {
   , elMinDmg = 0
   , eliteDamageReduction = 0
   , fireRes = 0
-  , healthGlobe = 0
+  , gf = 0
+  , healthGlobeHeal = 0
   , ias = 0 -- Increases attack speed by 7%
   , int = 0
-  , life = 0
+  , lifeBonus = 0
   , lifeOnHit = 0
+  , lifePerKill = 0
   , lifeRegen = 0
   , lightningRes = 0
   , maxDmg = 0
@@ -107,8 +117,10 @@ emptyItem s = Item {
   , missileDmgRed = 0
   , movement = 0
   , physicalRes = 0
+  , pickupRadius = 0
   , poisonRes = 0
   , reducedRendCost = 0
+  , spiritRegen = 0
   , str = 0
   , thorns = 0
   , vit = 0
@@ -147,6 +159,7 @@ data Char = Char {
 
   , passiveBonus :: Item
 
+  , exaltedSoul :: Bool
   , oneWithEverything :: Bool
   }
 
@@ -202,6 +215,7 @@ emptyChar kls lvl = Char {
 
   , passiveBonus = frenzyShrine
 
+  , exaltedSoul = False
   , oneWithEverything = False
   }
 
@@ -286,7 +300,7 @@ charAPS c = (weaponSpeed wpn + apsBonus wpn) * nonWeaponASBonus c
     wpn = weapon1 c
 
 damage :: Char -> Double
-damage char = minDmg wpn + maxDmg wpn + bonusDmg
+damage char = minDmg wpn + maxDmg wpn + elMinDmg wpn + elMaxDmg wpn + bonusDmg
   where
     wpn = weapon1 char
     bonusDmg = sum . map (\i -> minDmg i + maxDmg i) . filter (/= wpn) . itemList $ char
@@ -304,11 +318,8 @@ nonWeaponASBonus c =
   where
     wpn = weapon1 c
 
-primary :: Char -> Double
-primary char = charInt char * 0.01 + 1
-
 charDps :: Char -> Double
-charDps c = (damage c * weaponSpeed (weapon1 c) * nonWeaponASBonus c * charCritChance c * charCritDmg c * primary c) / 2
+charDps c = damage c * weaponSpeed (weapon1 c) * nonWeaponASBonus c * charCritChance c * charCritDmg c * (1 + charPrimaryDmgBonus c) / 2
 
 charBlockAmountMin :: Char -> Double
 charBlockAmountMin = blockAmountMin . offHand
@@ -395,3 +406,82 @@ charMeleeDmgRed = sumField meleeDmgRed
 
 charThorns :: Char -> Double
 charThorns = sumField thorns
+
+charMovement :: Char -> Double
+charMovement c = 0.25 `max` sumField movement c
+
+charGF :: Char -> Double
+charGF = sumField gf
+
+charMF :: Char -> Double
+charMF = sumField mf
+
+charBonusExp :: Char -> Double
+charBonusExp = sumField bonusExp
+
+charBonusExpPerKill :: Char -> Double
+charBonusExpPerKill = sumField bonusExpPerKill
+
+data Resource =
+    Fury
+  | Hatred
+  | Discipline
+  | Spirit
+  | Mana
+  | ArcanePower
+  deriving (Eq, Show)
+
+charResources :: Char -> [Resource]
+charResources c = case klass c of
+    Barbarian -> [Fury]
+    DemonHunter -> [Hatred, Discipline]
+    Monk -> [Spirit]
+    WitchDoctor -> [Mana]
+    Wizard -> [ArcanePower]
+
+monkSpiritMax :: Char -> Double
+monkSpiritMax c
+    | exaltedSoul c = 100 + 150
+    | otherwise = 150
+
+charResourceMax :: Resource -> Char -> Double
+charResourceMax Fury c | isBarbarian c = -1
+charResourceMax Hatred c | isDemonHunter c = -1
+charResourceMax Discipline c | isDemonHunter c = -1
+charResourceMax Spirit c | isMonk c = monkSpiritMax c
+charResourceMax Mana c | isWitchDoctor c = -1
+charResourceMax ArcanePower c | isWizard c = -1
+charResourceMax r c = error $ concat [
+  show (klass c), " does no have the resource ", show r]
+
+charResourceRegen :: Resource -> Char -> Double
+charResourceRegen Fury c | isBarbarian c = -1
+charResourceRegen Hatred c | isDemonHunter c = -1
+charResourceRegen Discipline c | isDemonHunter c = -1
+charResourceRegen Spirit c | isMonk c = sumField spiritRegen c
+charResourceRegen Mana c | isWitchDoctor c = -1
+charResourceRegen ArcanePower c | isWizard c = -1
+charResourceRegen _ _ = 0
+
+charMaxLife :: Char -> Double
+charMaxLife c
+  | level c >= 35 = (36 + 4*level c + (level c-25)*charVit c)*(1 + charLifeBonus c)
+  | otherwise = (36 + 4*level c + 10*charVit c)*(1 + charLifeBonus c)
+
+charLifeBonus :: Char -> Double
+charLifeBonus = sumField lifeBonus
+
+charLifeRegen :: Char -> Double
+charLifeRegen = sumField lifeRegen
+
+charLifeOnHit :: Char -> Double
+charLifeOnHit = sumField lifeOnHit
+
+charHealthGlobeHeal :: Char -> Double
+charHealthGlobeHeal = sumField healthGlobeHeal
+
+charPickupRadius :: Char -> Double
+charPickupRadius = sumField pickupRadius
+
+charLifePerKill :: Char -> Double
+charLifePerKill = sumField lifePerKill

@@ -31,8 +31,8 @@ keenRingOfWounding = (emptyItem Ring) {
 
 battleChamber :: Item
 battleChamber = (emptyItem Weapon1H) {
-    minDmg = 363
-  , maxDmg = 802
+    minDmg = 363 - 256
+  , maxDmg = 802 - 554
   , baseAS = 1.4
   , elMinDmg = 256
   , elMaxDmg = 554
@@ -111,7 +111,7 @@ dreadInnocence = (emptyItem Belt) {
   , vit = 152
   , poisonRes = 56
   , allRes = 42
-  , healthGlobe = 3318
+  , healthGlobeHeal = 3318
   , reducedRendCost = 4
   }
 
@@ -144,7 +144,7 @@ hellStyle = (emptyItem Shoulders) {
   , vit = 48
   , poisonRes = 42
   , allRes = 53
-  , life = 0.07
+  , lifeBonus = 0.07
   }
 
 andarielsVisage :: Item
@@ -155,7 +155,7 @@ andarielsVisage = (emptyItem Helm) {
   , ias = 0.06
   , lifeRegen = 87
   , critChance = 0.03
-  , life = 0.15
+  , lifeBonus = 0.15
   }
 
 forgeSerpent :: Item
@@ -189,7 +189,7 @@ ruggedWall = (emptyItem Shield) {
   , dex = 93 + 42 -- TODO socket
   , vit = 92
   , physicalRes = 29
-  , life = 0.05
+  , lifeBonus = 0.05
   , critChance = 0.1
   , corpseSpiderDmg = 0.12
   }
@@ -220,6 +220,7 @@ myMonk = (emptyChar Monk 60) {
    , offHand = ruggedWall
    , wrists = shackleCore
 
+   , exaltedSoul = False
    , oneWithEverything = True
   }
 
