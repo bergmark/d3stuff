@@ -1,8 +1,12 @@
 module Main where
 
 import Prelude hiding (Char)
+import qualified Prelude as P (Char)
 
+import Control.Arrow
 import Control.Monad
+import Data.List
+import Data.Maybe
 
 import Data
 import Items
@@ -33,19 +37,19 @@ main = do
   dashes
 
   putStrLn "Attributes: "
-  "Str" `p` charStr myMonk
-  "Dex" `p` charDex myMonk
-  "Int" `p` charInt myMonk
-  "Vit" `p` charVit myMonk
+  "Str" `pint` charStr myMonk
+  "Dex" `pint` charDex myMonk
+  "Int" `pint` charInt myMonk
+  "Vit" `pint` charVit myMonk
   dashes
-  "Armor" `p` charArmor myMonk
-  "Damage" `p` charDps myMonk
+  "Armor" `pint` charArmor myMonk
+  "Damage" `pint` charDps myMonk
   dashes
   putStrLn "Offense"
   "Damage Increased by Primary" `perc` charPrimaryDmgBonus myMonk
   "Attacks per second" `p` charAPS myMonk
   "Crit Chance" `perc` charCritChance myMonk
-  "Crit Damage" `perc` charCritDmg myMonk
+  "Crit Damage" `percint` charCritDmg myMonk
   dashes
   putStrLn "Defense"
   "Block Amount" `p` (charBlockAmountMin myMonk, charBlockAmountMax myMonk)
@@ -58,40 +62,52 @@ main = do
   "Lightning Res" `p` charLightningRes myMonk
   "Poison Res" `p` charPoisonRes myMonk
   "Arcane Res" `p` charArcaneRes myMonk
-  "Crowd Control Reduction" `p` charCrowdControlRed myMonk
-  "Missile Damage Reduction" `p` charMissileDmgRed myMonk
-  "Melee Damage Reduction" `p` charMeleeDmgRed myMonk
-  "Thorns" `p` charThorns myMonk
+  "Crowd Control Reduction" `percint` charCrowdControlRed myMonk
+  "Missile Damage Reduction" `percint` charMissileDmgRed myMonk
+  "Melee Damage Reduction" `percint` charMeleeDmgRed myMonk
+  "Thorns" `pint` charThorns myMonk
   dashes
   putStrLn "Life"
   "Maximum Life" `p` charMaxLife myMonk
-  "Life Bonus" `perc` charLifeBonus myMonk
-  "Life per Second" `p` charLifeRegen myMonk
-  "Life per Kill" `p` charLifePerKill myMonk
-  "Life per Hit" `p` charLifeOnHit myMonk
-  "Health Globe Healing Bonus" `p` charHealthGlobeHeal myMonk
-  "Pickup Radius" `p` charPickupRadius myMonk
+  "Life Bonus" `percint` charLifeBonus myMonk
+  "Life per Second" `pint` charLifeRegen myMonk
+  "Life per Kill" `pint` charLifePerKill myMonk
+  "Life per Hit" `pint` charLifeOnHit myMonk
+  "Health Globe Healing Bonus" `pint` charHealthGlobeHeal myMonk
+  "Pickup Radius" `pint` charPickupRadius myMonk
   dashes
   putStrLn "Resource"
   forM_ (charResources myMonk)
     (\r -> do
-      ("Maximum " ++ show r) `p` charResourceMax r myMonk
-      (show r ++ "Regenerated per Second") `p` charResourceRegen r myMonk)
+      ("Maximum " ++ show r) `pint` charResourceMax r myMonk
+      (show r ++ " Regenerated per Second") `p` charResourceRegen r myMonk)
   dashes
   putStrLn "Adventure"
-  "Movement Speed" `perc` charMovement myMonk
-  "Gold Find" `perc` charGF myMonk
-  "Magic Find" `perc` charMF myMonk
-  "Bonus Exp" `perc` charBonusExp myMonk
-  "Bonus Exp/Kill" `p` charBonusExpPerKill myMonk
+  "Movement Speed" `percint` charMovement myMonk
+  "Gold Find" `percint` charGF myMonk
+  "Magic Find" `percint` charMF myMonk
+  "Bonus Exp" `percint` charBonusExp myMonk
+  "Bonus Exp/Kill" `pint` charBonusExpPerKill myMonk
   where
     pr :: Show s => s -> IO ()
     pr = putStr . show
     p :: Show s => String -> s -> IO ()
     p s x = putStrLn $ s ++ ": " ++ show x
+    pint s x = p s (rnd x)
+    -- p2 :: String -> Double -> IO ()
+    -- p2 s x = putStrLn $ s ++ ": " ++ roundTwo x
     ln :: IO ()
     ln = putStrLn ""
     dashes = putStrLn "----------------"
     space = putStr " "
     perc :: String -> Double -> IO ()
-    perc s x = putStrLn $ s ++ ": " ++ (show (x * 100)) ++ "%"
+    perc s x = putStrLn $ s ++ ": " ++ roundTwo (x * 100) ++ "%"
+    percint s x = putStrLn $ s ++ ": " ++ show (rnd (x * 100)) ++ "%"
+    rnd :: Double -> Integer
+    rnd = round
+    roundTwo :: Double -> String
+    roundTwo = split . show
+      where
+        split :: String -> String
+        split s = uncurry (\a b -> a ++ "." ++ b) . second (take 2 . drop 1) . splitAt (fromJust (elemIndex '.' s)) $ s
+
