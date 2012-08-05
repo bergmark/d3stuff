@@ -1,0 +1,13 @@
+This is a stat calculator for Diablo III characters.
+
+TODO
+
+* Refactor Main to use printing functions instead of everything being hard coded in `main`
+* Calculate dual wield damage
+* Add resource information for all classes (only Monk added)
+* Add Other shrine bonuses (only frenzy shrine added)
+* Add passives (only some monk passives added)
+* Add skill damage calculations
+* Nested items for items with sockets?
+* Helpers for more easily adding items (Input with calculated dps and armor). This can already be done by just adding and inputting into the base fields but sugar might be nice
+* Define more base items
