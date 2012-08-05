@@ -297,7 +297,7 @@ charCritDmg :: Char -> Double
 charCritDmg c = baseCritDmg + sumField critDmg c
 
 charAPS :: Char -> Double
-charAPS c = (weaponSpeed (weapon1 c) + apsBonus (weapon1 c)) * nonWeaponIAS c
+charAPS c = (charWeaponSpeed (weapon1 c) c + apsBonus (weapon1 c)) * nonWeaponIAS c
 
 damage :: Item -> Char -> Double
 damage wpn c = minDmg wpn + maxDmg wpn + elMinDmg wpn + elMaxDmg wpn + bonusDmg
@@ -310,26 +310,34 @@ damage wpn c = minDmg wpn + maxDmg wpn + elMinDmg wpn + elMaxDmg wpn + bonusDmg
       else (/= wpn)
 
 weaponDps :: Item -> Double
-weaponDps w = (minDmg w `avg` maxDmg w) * weaponSpeed w
+weaponDps w = (minDmg w `avg` maxDmg w) * weaponSpeed' w
 
-weaponSpeed :: Item -> Double
-weaponSpeed w = baseAS w * (1 + ias w) + apsBonus w
+weaponSpeed' :: Item -> Double
+weaponSpeed' w = baseAS w * (1 + ias w) + apsBonus w
+
+-- Weapon speed with dual wield factored in
+charWeaponSpeed :: Item -> Char -> Double
+charWeaponSpeed w c
+  | charDualWields c = 2 / (1 / (baseAS w1 * (1 + ias w1) + apsBonus w1) + 1 / (baseAS w2 * (1 + ias w2) + apsBonus w2))
+  | otherwise = baseAS w * (1 + ias w) + apsBonus w
+  where
+    w1 = weapon1 c
+    w2 = offHand c
 -- TODO factor in aps for a second weapon?
 
 nonWeaponIAS :: Char -> Double
 nonWeaponIAS c
-  | charDualWields c = 1 + sumField ias c - ias (weapon1 c) - ias (offHand c)
+  | charDualWields c = 1 + sumField ias c - ias (weapon1 c) - ias (offHand c) + 0.15
   | otherwise = 1 + sumField ias c - ias (weapon1 c)
 
 charDps :: Char -> Double
 charDps c
-    | charDualWields c = dwBonus * (charWeaponDps (weapon1 c) c `avg` charWeaponDps (offHand c) c)
+    | charDualWields c = charWeaponDps (weapon1 c) c `avg` charWeaponDps (offHand c) c
     | otherwise = charWeaponDps (weapon1 c) c
   where
-    dwBonus = if charDualWields c then 1.15 else 1
 
 charWeaponDps :: Item -> Char -> Double
-charWeaponDps wpn c = damage wpn c * weaponSpeed wpn * nonWeaponIAS c * (1 + charCritChance c * charCritDmg c) * (1 + charPrimaryDmgBonus c) / 2
+charWeaponDps wpn c = damage wpn c * charWeaponSpeed wpn c * nonWeaponIAS c * (1 + charCritChance c * charCritDmg c) * (1 + charPrimaryDmgBonus c) / 2
 
 charDualWields :: Char -> Bool
 charDualWields c = slot (weapon1 c) == Weapon1H && slot (offHand c) == Weapon1H
@@ -357,11 +365,26 @@ charDmgRed c = arm / (50 * level c + arm)
   where
     arm = charArmor c
 
+charResRed :: Char -> Double
+charResRed c = aRes / (5 * level c + aRes)
+  where
+    aRes = charAllRes c
+
+charTotalRed :: Char -> Double
+charTotalRed c = 1 - (1 - charDmgRed c)*(1 - charResRed c)
+
+-- All res with passive bonuses
 charAllRes :: Char -> Double
-charAllRes c = sumField allRes c + charInt c/10
+charAllRes c
+    | oneWithEverything c = oweMaxRes c
+    | otherwise = _charAllRes c
+
+-- Only the allres stat and int
+_charAllRes :: Char -> Double
+_charAllRes c = sumField allRes c + charInt c/10
 
 oweMaxRes :: Char -> Double
-oweMaxRes c = charAllRes c + maximum [
+oweMaxRes c = _charAllRes c + maximum [
     _charPhysicalRes c
   , _charColdRes c
   , _charFireRes c
@@ -387,27 +410,27 @@ _charArcaneRes = sumField arcaneRes
 charPhysicalRes :: Char -> Double
 charPhysicalRes c
   | oneWithEverything c = oweMaxRes c
-  | otherwise = charAllRes c + sumField physicalRes c
+  | otherwise = _charAllRes c + sumField physicalRes c
 charColdRes :: Char -> Double
 charColdRes c
   | oneWithEverything c = oweMaxRes c
-  | otherwise = charAllRes c + sumField coldRes c
+  | otherwise = _charAllRes c + sumField coldRes c
 charFireRes :: Char -> Double
 charFireRes c
   | oneWithEverything c = oweMaxRes c
-  | otherwise = charAllRes c + sumField fireRes c
+  | otherwise = _charAllRes c + sumField fireRes c
 charLightningRes :: Char -> Double
 charLightningRes c
   | oneWithEverything c = oweMaxRes c
-  | otherwise = charAllRes c + sumField lightningRes c
+  | otherwise = _charAllRes c + sumField lightningRes c
 charPoisonRes :: Char -> Double
 charPoisonRes c
   | oneWithEverything c = oweMaxRes c
-  | otherwise = charAllRes c + sumField poisonRes c
+  | otherwise = _charAllRes c + sumField poisonRes c
 charArcaneRes :: Char -> Double
 charArcaneRes c
   | oneWithEverything c = oweMaxRes c
-  | otherwise = charAllRes c + sumField arcaneRes c
+  | otherwise = _charAllRes c + sumField arcaneRes c
 
 charCrowdControlRed :: Char -> Double
 charCrowdControlRed = sumField crowdControlRed

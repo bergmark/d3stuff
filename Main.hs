@@ -88,6 +88,11 @@ main = do
   "Magic Find" `percint` charMF myMonk
   "Bonus Exp" `percint` charBonusExp myMonk
   "Bonus Exp/Kill" `pint` charBonusExpPerKill myMonk
+  dashes
+  putStrLn "EHP"
+  "Armor DR" `perc` charDmgRed myMonk
+  "Resistance DR" `perc` charResRed myMonk
+  "Total DR" `perc` charTotalRed myMonk
   where
     pr :: Show s => s -> IO ()
     pr = putStr . show
