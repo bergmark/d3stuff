@@ -222,5 +222,6 @@ myMonk = (emptyChar Monk 60) {
 
    , exaltedSoul = False
    , oneWithEverything = True
+   , seizeTheInitiative = True
   }
 

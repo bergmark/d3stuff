@@ -157,10 +157,13 @@ data Char = Char {
   , wrists :: Item
   , helm :: Item
 
+  -- Shrine bonuses
   , passiveBonus :: Item
 
+  -- Monk passives
   , exaltedSoul :: Bool
   , oneWithEverything :: Bool
+  , seizeTheInitiative :: Bool
   }
 
 isBarbarian :: Char -> Bool
@@ -217,6 +220,7 @@ emptyChar kls lvl = Char {
 
   , exaltedSoul = False
   , oneWithEverything = False
+  , seizeTheInitiative = False
   }
 
 -- | Calculations
@@ -267,11 +271,10 @@ primaryAttrValue c
   | otherwise = error "primaryAttrValue impossible"
 
 charArmor :: Char -> Double
-charArmor c = charBaseStr c + charBaseDex c + itemArmor + itemStr + itemDex
+charArmor c = charStr c + itemArmor c + stiBonus c
   where
-    itemArmor = sumField armor c
-    itemStr = sumField str c
-    itemDex = sumField dex c
+    itemArmor = sumField armor
+    stiBonus c' = if seizeTheInitiative c' then charDex c' else 0
 
 sumField :: (Item -> Double) -> Char -> Double
 sumField f = sum . map f . itemList
