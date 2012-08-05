@@ -47,7 +47,7 @@ main = do
   dashes
   putStrLn "Offense"
   "Damage Increased by Primary" `perc` charPrimaryDmgBonus myMonk
-  "Attacks per second" `p` charAPS myMonk
+  "Attacks per second" `p2` charAPS myMonk
   "Crit Chance" `perc` charCritChance myMonk
   "Crit Damage" `percint` charCritDmg myMonk
   dashes
@@ -93,14 +93,20 @@ main = do
   "Armor DR" `perc` charDmgRed myMonk
   "Resistance DR" `perc` charResRed myMonk
   "Total DR" `perc` charTotalRed myMonk
+  "EHP" `pint` charEHP myMonk
+  "Life regen" `perc` charLifeRegenPerc myMonk
+  "Life on hit" `perc` charLifeOnHitPerc myMonk
+  "Total Life/s" `pint` charTotalLifePerSec myMonk
+  "Total life gain (regen + LoH)" `perc` charTotalLifePerSecPerc myMonk
+  "Block / max HP" `perc` charBlockDmgPerc myMonk
   where
     pr :: Show s => s -> IO ()
     pr = putStr . show
     p :: Show s => String -> s -> IO ()
     p s x = putStrLn $ s ++ ": " ++ show x
     pint s x = p s (rnd x)
-    -- p2 :: String -> Double -> IO ()
-    -- p2 s x = putStrLn $ s ++ ": " ++ roundTwo x
+    p2 :: String -> Double -> IO ()
+    p2 s x = putStrLn $ s ++ ": " ++ roundTwo x
     ln :: IO ()
     ln = putStrLn ""
     dashes = putStrLn "----------------"

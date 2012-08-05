@@ -297,7 +297,14 @@ charCritDmg :: Char -> Double
 charCritDmg c = baseCritDmg + sumField critDmg c
 
 charAPS :: Char -> Double
-charAPS c = (charWeaponSpeed (weapon1 c) c + apsBonus (weapon1 c)) * nonWeaponIAS c
+charAPS c
+  -- TODO fix (too high with 1.15, too low without)
+  | charDualWields c = 1.15 * (waps w1 `avg` waps w2)
+  | otherwise = waps w1
+  where
+    waps w = (charWeaponSpeed w c + apsBonus w) * nonWeaponIAS c
+    w1 = weapon1 c
+    w2 = offHand c
 
 damage :: Item -> Char -> Double
 damage wpn c = minDmg wpn + maxDmg wpn + elMinDmg wpn + elMaxDmg wpn + bonusDmg
@@ -359,19 +366,6 @@ charDodgeChance c
     | otherwise = (30 + 0.01*(dext-1000))/100
   where
     dext = charDex c
-
-charDmgRed :: Char -> Double
-charDmgRed c = arm / (50 * level c + arm)
-  where
-    arm = charArmor c
-
-charResRed :: Char -> Double
-charResRed c = aRes / (5 * level c + aRes)
-  where
-    aRes = charAllRes c
-
-charTotalRed :: Char -> Double
-charTotalRed c = 1 - (1 - charDmgRed c)*(1 - charResRed c)
 
 -- All res with passive bonuses
 charAllRes :: Char -> Double
@@ -529,3 +523,47 @@ charPickupRadius = sumField pickupRadius
 
 charLifePerKill :: Char -> Double
 charLifePerKill = sumField lifePerKill
+
+-- | Survivability (EHP, reductions, regen%)
+
+charDmgRed :: Char -> Double
+charDmgRed c = arm / (50 * level c + arm)
+  where
+    arm = charArmor c
+
+charResRed :: Char -> Double
+charResRed c = aRes / (5 * level c + aRes)
+  where
+    aRes = charAllRes c
+
+charInnateDR :: Char -> Double
+charInnateDR c = case klass c of
+  Barbarian -> 0.3
+  DemonHunter -> 0
+  Monk -> 0.3
+  WitchDoctor -> 0 -- TODO add passive
+  Wizard -> 0
+
+charEHP :: Char -> Double
+charEHP c = charMaxLife c / ((1-charDmgRed c) * (1-charResRed c) * (1-charInnateDR c))
+
+charTotalRed :: Char -> Double
+charTotalRed c = 1 - (1 - charDmgRed c)*(1 - charResRed c)
+
+charLifeRegenPerc :: Char -> Double
+charLifeRegenPerc c = charLifeRegen c / charMaxLife c
+
+charLifeOnHitPerc :: Char -> Double
+charLifeOnHitPerc c = charLifeOnHit c / charMaxLife c
+
+charTotalLifePerSec :: Char -> Double
+charTotalLifePerSec c = charLifeRegen c + (charAPS c * charLifeOnHit c)
+
+charTotalLifePerSecPerc :: Char -> Double
+charTotalLifePerSecPerc c = charTotalLifePerSec c / charMaxLife c
+
+charBlockAmountAvg :: Char -> Double
+charBlockAmountAvg c = charBlockAmountMax c `avg` charBlockAmountMin c
+
+charBlockDmgPerc :: Char -> Double
+charBlockDmgPerc c = charBlockAmountAvg c / charMaxLife c
