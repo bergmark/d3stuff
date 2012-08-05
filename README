@@ -11,3 +11,4 @@ TODO
 * Nested items for items with sockets?
 * Helpers for more easily adding items (Input with calculated dps and armor). This can already be done by just adding and inputting into the base fields but sugar might be nice
 * Define more base items
+* Calculate EHP

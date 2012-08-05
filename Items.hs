@@ -160,8 +160,9 @@ andarielsVisage = (emptyItem Helm) {
 
 forgeSerpent :: Item
 forgeSerpent = (emptyItem Weapon1H) {
-    minDmg = 344
-  , maxDmg = 694
+    baseAS = 1.2
+  , minDmg = 344 - 155
+  , maxDmg = 694 - 345
   , elMinDmg = 155
   , elMaxDmg = 345
   , str = 199
@@ -206,6 +207,9 @@ exampleWiz = (emptyChar Wizard 10) {
 myMonk :: Char
 myMonk = (emptyChar Monk 60) {
      weapon1 = battleChamber
+--     weapon1 = forgeSerpent
+   , offHand = forgeSerpent
+--   , offHand = ruggedWall
    , gloves = thiefsThrasher
    , ring1 = assassinsVow
    , ring2 = glamourMutiny
@@ -216,8 +220,6 @@ myMonk = (emptyChar Monk 60) {
    , chest = banishedVestments
    , shoulders = hellStyle
    , helm = andarielsVisage
- --  , offHand = forgeSerpent
-   , offHand = ruggedWall
    , wrists = shackleCore
 
    , exaltedSoul = False

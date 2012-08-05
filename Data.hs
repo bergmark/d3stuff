@@ -297,15 +297,17 @@ charCritDmg :: Char -> Double
 charCritDmg c = baseCritDmg + sumField critDmg c
 
 charAPS :: Char -> Double
-charAPS c = (weaponSpeed wpn + apsBonus wpn) * nonWeaponIAS c
-  where
-    wpn = weapon1 c
+charAPS c = (weaponSpeed (weapon1 c) + apsBonus (weapon1 c)) * nonWeaponIAS c
 
-damage :: Char -> Double
-damage char = minDmg wpn + maxDmg wpn + elMinDmg wpn + elMaxDmg wpn + bonusDmg
+damage :: Item -> Char -> Double
+damage wpn c = minDmg wpn + maxDmg wpn + elMinDmg wpn + elMaxDmg wpn + bonusDmg
   where
-    wpn = weapon1 char
-    bonusDmg = sum . map (\i -> minDmg i + maxDmg i) . filter (/= wpn) . itemList $ char
+    bonusDmg :: Double
+    bonusDmg = sum . map (\i -> minDmg i + maxDmg i) . filter itemFilter $ itemList c
+    itemFilter :: Item -> Bool
+    itemFilter = if charDualWields c
+      then not . (`elem` [weapon1 c, offHand c])
+      else (/= wpn)
 
 weaponDps :: Item -> Double
 weaponDps w = (minDmg w `avg` maxDmg w) * weaponSpeed w
@@ -315,13 +317,22 @@ weaponSpeed w = baseAS w * (1 + ias w) + apsBonus w
 -- TODO factor in aps for a second weapon?
 
 nonWeaponIAS :: Char -> Double
-nonWeaponIAS c =
-  1 + sumField ias c - ias wpn
-  where
-    wpn = weapon1 c
+nonWeaponIAS c
+  | charDualWields c = 1 + sumField ias c - ias (weapon1 c) - ias (offHand c)
+  | otherwise = 1 + sumField ias c - ias (weapon1 c)
 
 charDps :: Char -> Double
-charDps c = damage c * weaponSpeed (weapon1 c) * nonWeaponIAS c * (1 + charCritChance c * charCritDmg c) * (1 + charPrimaryDmgBonus c) / 2
+charDps c
+    | charDualWields c = dwBonus * (charWeaponDps (weapon1 c) c `avg` charWeaponDps (offHand c) c)
+    | otherwise = charWeaponDps (weapon1 c) c
+  where
+    dwBonus = if charDualWields c then 1.15 else 1
+
+charWeaponDps :: Item -> Char -> Double
+charWeaponDps wpn c = damage wpn c * weaponSpeed wpn * nonWeaponIAS c * (1 + charCritChance c * charCritDmg c) * (1 + charPrimaryDmgBonus c) / 2
+
+charDualWields :: Char -> Bool
+charDualWields c = slot (weapon1 c) == Weapon1H && slot (offHand c) == Weapon1H
 
 charBlockAmountMin :: Char -> Double
 charBlockAmountMin = blockAmountMin . offHand
