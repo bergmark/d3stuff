@@ -223,9 +223,9 @@ myMonk = (emptyChar Monk 60) {
    , shoulders = hellStyle
    , wrists = shackleCore
 
-   , chantOfResonance = True
-   , exaltedSoul = False
-   , oneWithEverything = True
-   , seizeTheInitiative = True
+   , buffs = [
+       ChantOfResonance
+     , ExaltedSoul
+     , OneWithEverything
+     , SeizeTheInitiative]
   }
-

@@ -25,6 +25,17 @@ data Slot =
   | Wrists
     deriving (Show, Eq)
 
+data Buff =
+  -- Monk Passives
+    ChantOfResonance
+  | ExaltedSoul
+  | OneWithEverything
+  | SeizeTheInitiative
+    deriving (Eq, Show)
+
+charHasBuff :: Buff -> Char -> Bool
+charHasBuff b c = b `elem` buffs c
+
 data Item = Item {
     slot :: Slot
   , allRes :: Double
@@ -163,11 +174,7 @@ data Char = Char {
   -- Shrine bonuses
   , passiveBonus :: Item
 
-  -- Monk passives
-  , chantOfResonance :: Bool
-  , exaltedSoul :: Bool
-  , oneWithEverything :: Bool
-  , seizeTheInitiative :: Bool
+  , buffs :: [Buff]
   }
 
 isBarbarian :: Char -> Bool
@@ -222,10 +229,7 @@ emptyChar kls lvl = Char {
 
   , passiveBonus = frenzyShrine
 
-  , chantOfResonance = False
-  , exaltedSoul = False
-  , oneWithEverything = False
-  , seizeTheInitiative = False
+  , buffs = []
   }
 
 -- | Calculations
@@ -275,7 +279,7 @@ primaryAttrValue c = (case klass c of
   Wizard -> charInt) c
 
 charArmor :: Char -> Double
-charArmor c = charStr c + sumField armor c + if0 (seizeTheInitiative c) (charDex c)
+charArmor c = charStr c + sumField armor c + if0 (charHasBuff SeizeTheInitiative c) (charDex c)
 
 sumField :: (Item -> Double) -> Char -> Double
 sumField f = sum . map f . itemList
@@ -373,7 +377,7 @@ charDodgeChance c
 -- All res with passive bonuses
 charAllRes :: Char -> Double
 charAllRes c
-    | oneWithEverything c = oweMaxRes c
+    | charHasBuff OneWithEverything c = oweMaxRes c
     | otherwise = _charAllRes c
 
 -- Only the allres stat and int
@@ -406,27 +410,27 @@ _charArcaneRes = sumField arcaneRes
 
 charPhysicalRes :: Char -> Double
 charPhysicalRes c
-  | oneWithEverything c = oweMaxRes c
+  | charHasBuff OneWithEverything c = oweMaxRes c
   | otherwise = _charAllRes c + sumField physicalRes c
 charColdRes :: Char -> Double
 charColdRes c
-  | oneWithEverything c = oweMaxRes c
+  | charHasBuff OneWithEverything c = oweMaxRes c
   | otherwise = _charAllRes c + sumField coldRes c
 charFireRes :: Char -> Double
 charFireRes c
-  | oneWithEverything c = oweMaxRes c
+  | charHasBuff OneWithEverything c = oweMaxRes c
   | otherwise = _charAllRes c + sumField fireRes c
 charLightningRes :: Char -> Double
 charLightningRes c
-  | oneWithEverything c = oweMaxRes c
+  | charHasBuff OneWithEverything c = oweMaxRes c
   | otherwise = _charAllRes c + sumField lightningRes c
 charPoisonRes :: Char -> Double
 charPoisonRes c
-  | oneWithEverything c = oweMaxRes c
+  | charHasBuff OneWithEverything c = oweMaxRes c
   | otherwise = _charAllRes c + sumField poisonRes c
 charArcaneRes :: Char -> Double
 charArcaneRes c
-  | oneWithEverything c = oweMaxRes c
+  | charHasBuff OneWithEverything c = oweMaxRes c
   | otherwise = _charAllRes c + sumField arcaneRes c
 
 charCrowdControlRed :: Char -> Double
@@ -475,7 +479,7 @@ charResources c = case klass c of
 
 monkSpiritMax :: Char -> Double
 monkSpiritMax c
-    | exaltedSoul c = 100 + 150
+    | charHasBuff ExaltedSoul c = 100 + 150
     | otherwise = 150
 
 -- TODO Numbers for all classes
@@ -494,7 +498,7 @@ charResourceRegen :: Resource -> Char -> Double
 charResourceRegen Fury c | isBarbarian c = -1
 charResourceRegen Hatred c | isDemonHunter c = -1
 charResourceRegen Discipline c | isDemonHunter c = -1
-charResourceRegen Spirit c | isMonk c = sumField spiritRegen c + if0 (chantOfResonance c) 2
+charResourceRegen Spirit c | isMonk c = sumField spiritRegen c + if0 (charHasBuff ChantOfResonance c) 2
 charResourceRegen Mana c | isWitchDoctor c = -1
 charResourceRegen ArcanePower c | isWizard c = -1
 charResourceRegen r c = error $ concat [
