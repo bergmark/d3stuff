@@ -94,10 +94,10 @@ main = do
   "Resistance DR" `perc` charResRed myMonk
   "Total DR" `perc` charTotalRed myMonk
   "EHP" `pint` charEHP myMonk
-  "Life regen" `perc` charLifeRegenPerc myMonk
-  "Life on hit" `perc` charLifeOnHitPerc myMonk
+  "Life% regen" `perc` charLifeRegenPerc myMonk
+  "Life% on hit" `perc` charLifeOnHitPerc myMonk
   "Total Life/s" `pint` charTotalLifePerSec myMonk
-  "Total life gain (regen + LoH)" `perc` charTotalLifePerSecPerc myMonk
+  "Total life%/s gain (regen + LoH)" `perc` charTotalLifePerSecPerc myMonk
   "Block / max HP" `perc` charBlockDmgPerc myMonk
   where
     pr :: Show s => s -> IO ()

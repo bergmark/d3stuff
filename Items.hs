@@ -61,7 +61,7 @@ thiefsThrasher = (emptyItem Gloves) {
   , str = 45
   , dex = 117
   , vit = 65
-  , mf = 11
+  , mf = 0.11
   , critChance = 0.05
   }
 
@@ -89,7 +89,7 @@ blackthornesBoots = (emptyItem Boots) {
   , poisonRes = 56
   , bonusArmor = 204
   , lifeRegen = 150
-  , movement = 0.012
+  , movement = 0.12
   , eliteDamageReduction = 0.03
   }
 
@@ -224,7 +224,12 @@ myMonk = (emptyChar Monk 60) {
    , wrists = shackleCore
 
    , buffs = [
-       ChantOfResonance
+       FrenzyShrine
+     , FortuneShrine
+     , ProtectionShrine
+     , EnlightenmentShrine
+
+     , ChantOfResonance
      , ExaltedSoul
      , OneWithEverything
      , SeizeTheInitiative]

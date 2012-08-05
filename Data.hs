@@ -26,8 +26,13 @@ data Slot =
     deriving (Show, Eq)
 
 data Buff =
+  -- Shrines
+    FrenzyShrine -- TODO include in calculations
+  | FortuneShrine
+  | ProtectionShrine -- TODO include in calculations
+  | EnlightenmentShrine
   -- Monk Passives
-    ChantOfResonance
+  | ChantOfResonance
   | ExaltedSoul
   | OneWithEverything
   | SeizeTheInitiative
@@ -171,9 +176,6 @@ data Char = Char {
   , weapon1 :: Item
   , wrists :: Item
 
-  -- Shrine bonuses
-  , passiveBonus :: Item
-
   , buffs :: [Buff]
   }
 
@@ -226,8 +228,6 @@ emptyChar kls lvl = Char {
   , shoulders = emptyItem Shoulders
   , weapon1 = emptyItem Weapon1H
   , wrists = emptyItem Wrists
-
-  , passiveBonus = frenzyShrine
 
   , buffs = []
   }
@@ -446,13 +446,13 @@ charThorns :: Char -> Double
 charThorns = sumField thorns
 
 charMovement :: Char -> Double
-charMovement c = 0.25 `max` sumField movement c
+charMovement c = 0.25 `min` sumField movement c
 
 charGF :: Char -> Double
-charGF = sumField gf
+charGF c = sumField gf c + if0 (charHasBuff FortuneShrine c) 0.25
 
 charMF :: Char -> Double
-charMF = sumField mf
+charMF c = sumField mf c + if0 (charHasBuff FortuneShrine c) 0.25
 
 charBonusExp :: Char -> Double
 charBonusExp = sumField bonusExp
