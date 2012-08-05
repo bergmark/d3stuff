@@ -262,13 +262,12 @@ charVit :: Char -> Double
 charVit char = charBaseVit char + (sum . map vit . itemList $ char)
 
 primaryAttrValue :: Char -> Double
-primaryAttrValue c
-  | isBarbarian c = charStr c
-  | isDemonHunter c = charDex c
-  | isMonk c = charDex c
-  | isWitchDoctor c = charInt c
-  | isWizard c = charInt c
-  | otherwise = error "primaryAttrValue impossible"
+primaryAttrValue c = (case klass c of
+  Barbarian -> charStr
+  DemonHunter -> charDex
+  Monk -> charDex
+  WitchDoctor -> charInt
+  Wizard -> charInt) c
 
 charArmor :: Char -> Double
 charArmor c = charStr c + itemArmor c + stiBonus c
@@ -448,16 +447,18 @@ monkSpiritMax c
     | exaltedSoul c = 100 + 150
     | otherwise = 150
 
+-- TODO Numbers for all classes
 charResourceMax :: Resource -> Char -> Double
-charResourceMax Fury c | isBarbarian c = -1
-charResourceMax Hatred c | isDemonHunter c = -1
-charResourceMax Discipline c | isDemonHunter c = -1
-charResourceMax Spirit c | isMonk c = monkSpiritMax c
-charResourceMax Mana c | isWitchDoctor c = -1
-charResourceMax ArcanePower c | isWizard c = -1
+charResourceMax Fury        c | isBarbarian c   = -1
+charResourceMax Hatred      c | isDemonHunter c = -1
+charResourceMax Discipline  c | isDemonHunter c = -1
+charResourceMax Spirit      c | isMonk c        = monkSpiritMax c
+charResourceMax Mana        c | isWitchDoctor c = -1
+charResourceMax ArcanePower c | isWizard c      = -1
 charResourceMax r c = error $ concat [
-  show (klass c), " does no have the resource ", show r]
+  show (klass c), " does not have the resource ", show r]
 
+-- TODO Numbers for all classes
 charResourceRegen :: Resource -> Char -> Double
 charResourceRegen Fury c | isBarbarian c = -1
 charResourceRegen Hatred c | isDemonHunter c = -1
@@ -465,12 +466,17 @@ charResourceRegen Discipline c | isDemonHunter c = -1
 charResourceRegen Spirit c | isMonk c = sumField spiritRegen c
 charResourceRegen Mana c | isWitchDoctor c = -1
 charResourceRegen ArcanePower c | isWizard c = -1
-charResourceRegen _ _ = 0
+charResourceRegen r c = error $ concat [
+  show (klass c), " does not have the resource ", show r]
 
 charMaxLife :: Char -> Double
 charMaxLife c
-  | level c >= 35 = (36 + 4*level c + (level c-25)*charVit c)*(1 + charLifeBonus c)
-  | otherwise = (36 + 4*level c + 10*charVit c)*(1 + charLifeBonus c)
+  | level c >= 35 = (36 + 4*lvl + (lvl-25)*vita)*(1 + life)
+  | otherwise = (36 + 4*lvl + 10*vita)*(1 + life)
+    where
+      lvl = level c
+      vita = charVit c
+      life = charLifeBonus c
 
 charLifeBonus :: Char -> Double
 charLifeBonus = sumField lifeBonus
