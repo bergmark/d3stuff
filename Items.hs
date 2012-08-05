@@ -210,18 +210,20 @@ myMonk = (emptyChar Monk 60) {
 --     weapon1 = forgeSerpent
    , offHand = forgeSerpent
 --   , offHand = ruggedWall
+
+   , amulet = tenaciosMedallion
+   , belt = dreadInnocence
+   , boots = blackthornesBoots
+   , chest = banishedVestments
    , gloves = thiefsThrasher
+   , helm = andarielsVisage
+   , pants = battleGlamour
    , ring1 = assassinsVow
    , ring2 = glamourMutiny
-   , boots = blackthornesBoots
-   , pants = battleGlamour
-   , belt = dreadInnocence
-   , amulet = tenaciosMedallion
-   , chest = banishedVestments
    , shoulders = hellStyle
-   , helm = andarielsVisage
    , wrists = shackleCore
 
+   , chantOfResonance = True
    , exaltedSoul = False
    , oneWithEverything = True
    , seizeTheInitiative = True

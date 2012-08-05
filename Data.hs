@@ -5,6 +5,9 @@ import Prelude hiding (Char)
 avg :: Double -> Double -> Double
 avg a b = (a+b)/2
 
+if0 :: Num a => Bool -> a -> a
+if0 b a = if b then a else 0
+
 data Slot =
     Amulet
   | Belt
@@ -143,24 +146,25 @@ data Char = Char {
     level :: Double
   , klass :: Klass
 
-  , weapon1 :: Item
+  , amulet :: Item
+  , belt :: Item
+  , boots :: Item
+  , chest :: Item
+  , gloves :: Item
+  , helm :: Item
   , offHand :: Item
+  , pants :: Item
   , ring1 :: Item
   , ring2 :: Item
-  , amulet :: Item
-  , gloves :: Item
-  , boots :: Item
-  , pants :: Item
-  , chest :: Item
-  , belt :: Item
   , shoulders :: Item
+  , weapon1 :: Item
   , wrists :: Item
-  , helm :: Item
 
   -- Shrine bonuses
   , passiveBonus :: Item
 
   -- Monk passives
+  , chantOfResonance :: Bool
   , exaltedSoul :: Bool
   , oneWithEverything :: Bool
   , seizeTheInitiative :: Bool
@@ -218,6 +222,7 @@ emptyChar kls lvl = Char {
 
   , passiveBonus = frenzyShrine
 
+  , chantOfResonance = False
   , exaltedSoul = False
   , oneWithEverything = False
   , seizeTheInitiative = False
@@ -270,10 +275,7 @@ primaryAttrValue c = (case klass c of
   Wizard -> charInt) c
 
 charArmor :: Char -> Double
-charArmor c = charStr c + itemArmor c + stiBonus c
-  where
-    itemArmor = sumField armor
-    stiBonus c' = if seizeTheInitiative c' then charDex c' else 0
+charArmor c = charStr c + sumField armor c + if0 (seizeTheInitiative c) (charDex c)
 
 sumField :: (Item -> Double) -> Char -> Double
 sumField f = sum . map f . itemList
@@ -309,6 +311,7 @@ charAPS c
 damage :: Item -> Char -> Double
 damage wpn c = minDmg wpn + maxDmg wpn + elMinDmg wpn + elMaxDmg wpn + bonusDmg
   where
+    -- +min/max dmg from non-weapons
     bonusDmg :: Double
     bonusDmg = sum . map (\i -> minDmg i + maxDmg i) . filter itemFilter $ itemList c
     itemFilter :: Item -> Bool
@@ -491,7 +494,7 @@ charResourceRegen :: Resource -> Char -> Double
 charResourceRegen Fury c | isBarbarian c = -1
 charResourceRegen Hatred c | isDemonHunter c = -1
 charResourceRegen Discipline c | isDemonHunter c = -1
-charResourceRegen Spirit c | isMonk c = sumField spiritRegen c
+charResourceRegen Spirit c | isMonk c = sumField spiritRegen c + if0 (chantOfResonance c) 2
 charResourceRegen Mana c | isWitchDoctor c = -1
 charResourceRegen ArcanePower c | isWizard c = -1
 charResourceRegen r c = error $ concat [
